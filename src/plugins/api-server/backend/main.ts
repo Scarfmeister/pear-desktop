@@ -5,6 +5,7 @@ import { createServer as createHttpsServer } from 'node:https';
 import { serve, upgradeWebSocket } from '@hono/node-server';
 import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono as Hono } from '@hono/zod-openapi';
+import { ipcMain } from 'electron';
 import { cors } from 'hono/cors';
 import { jwt } from 'hono/jwt';
 import { WebSocketServer } from 'ws';
@@ -14,7 +15,13 @@ import { registerCallback } from '@/providers/song-info';
 import { createBackend } from '@/utils';
 
 import { API_VERSION } from './api-version';
-import { registerAuth, registerControl, registerWebsocket } from './routes';
+import { PlaylistBroker } from './playlist-broker';
+import {
+  registerAuth,
+  registerControl,
+  registerPlaylist,
+  registerWebsocket,
+} from './routes';
 import { JWTPayloadSchema } from './scheme';
 
 import { type APIServerConfig, AuthStrategy } from '../config';
@@ -59,8 +66,11 @@ export const backend = createBackend<BackendType, APIServerConfig>({
   },
   stop() {
     this.end();
+    this.playlistBroker?.dispose();
+    this.playlistBroker = undefined;
   },
   onConfigChange(config) {
+    this.playlistBroker?.reset();
     const old = this.oldConfig;
     if (
       old?.hostname === config.hostname &&
@@ -81,6 +91,12 @@ export const backend = createBackend<BackendType, APIServerConfig>({
   // Custom
   init(backendCtx) {
     this.app = new Hono();
+    this.playlistBroker?.dispose();
+    this.playlistBroker = new PlaylistBroker(
+      backendCtx.window,
+      ipcMain,
+      backendCtx.getConfig,
+    );
 
     this.app.use('*', cors());
 
@@ -139,6 +155,7 @@ export const backend = createBackend<BackendType, APIServerConfig>({
       () => this.volumeState,
     );
     registerAuth(this.app, backendCtx);
+    registerPlaylist(this.app, backendCtx, this.playlistBroker);
     registerWebsocket(this.app, backendCtx, upgradeWebSocket);
 
     // swagger
@@ -195,11 +212,14 @@ export const backend = createBackend<BackendType, APIServerConfig>({
             };
 
       this.server = serve(serveOptions);
+      this.oldConfig = config;
+      this.playlistBroker?.resume();
     } catch (err) {
       console.error(err);
     }
   },
   end() {
+    this.playlistBroker?.suspend();
     this.server?.close();
     this.server = undefined;
   },

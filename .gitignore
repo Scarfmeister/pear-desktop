@@ -1,6 +1,8 @@
 node_modules
 /dist
 /pack
+/test-results/
+/playwright-report/
 .vscode/settings.json
 .idea
 
