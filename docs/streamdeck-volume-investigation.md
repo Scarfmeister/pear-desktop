@@ -1,6 +1,6 @@
 # Pear external volume investigation
 
-Investigated 2026-10-07. Combined fork branch: `feature/streamdeck-api-extensions`.
+Investigated 2026-10-07. Combined fork branch: `feature/streamdeck-api-extensions`. Implementation commit: `1816966795ba025cce9afd179e028d5d814fdbb0`. The following documentation commit records this stable implementation SHA.
 
 ## Upstream evidence
 

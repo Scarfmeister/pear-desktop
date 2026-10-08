@@ -43,6 +43,6 @@ Automated tests run with `pnpm test tests/api-playlist src --reporter=line`. The
 
 ## Combined Stream Deck integration
 
-Fork branch `Scarfmeister/pear-desktop:feature/streamdeck-api-extensions` combines the native playlist endpoint with the external volume fix. The implementation commit is recorded in [the volume investigation](../../../docs/streamdeck-volume-investigation.md); the subsequent documentation commit identifies it without a self-referential SHA.
+Fork branch `Scarfmeister/pear-desktop:feature/streamdeck-api-extensions` combines the native playlist endpoint with the external volume fix. Implementation commit: `1816966795ba025cce9afd179e028d5d814fdbb0`. See [the volume investigation](../../../docs/streamdeck-volume-investigation.md) for upstream evidence, validation and Windows run commands.
 
 `POST /api/v1/volume` accepts finite numbers from 0 through 100 and rounds fractions to the player's integer contract. GET and `VOLUME_CHANGED` report the same player scale. Invalid inputs receive the existing validation 400 response. A 204 acknowledges dispatch; wait for confirmed state. Precise-volume retains its own state/UI update path, and mute remains separate.
